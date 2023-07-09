@@ -1,106 +1,103 @@
+import json
 import os
 
-import chainlit as cl
 from dotenv import load_dotenv
-from langchain import PromptTemplate, LLMChain
-from langchain.agents import AgentType, Tool, initialize_agent
-from langchain.chains import ConversationChain
-from langchain.chains.conversation.memory import ConversationBufferMemory
-from langchain.chat_models import ChatOpenAI
-from langchain.tools import DuckDuckGoSearchRun
-from langchain.utilities import OpenWeatherMapAPIWrapper
+from langchain import PromptTemplate, OpenAI, LLMChain
+import chainlit as cl
+import requests
 
 load_dotenv()
 
 # OpenAI API key
-OPENAI_API_KEY = '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'
-# OpenWeather API key
-os.environ["OPENWEATHERMAP_API_KEY"] = '0e4b0b27974960b0dd09faeb7dfde1fb'
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo", openai_api_key=OPENAI_API_KEY)
+prompt_template = "{input}?"
 
-search = DuckDuckGoSearchRun()
-weather = OpenWeatherMapAPIWrapper(openweathermap_api_key='0e4b0b27974960b0dd09faeb7dfde1fb')
+is_first_question_asked = False
+is_second_question_asked = False
+is_third_question_asked = False
 
-# Web Search Tool
-search_tool = Tool(
-    name="Web Search",
-    func=search.run,
-    description="A useful tool for searching the Internet to find information on world events, issues, etc. Worth "
-                "using for general topics. Use precise questions.",
-)
+is_match_response_from_endpoint = False
 
-# Open Weather Tool
-open_weather_tool = Tool(
-    name="Open Weather",
-    func=weather.run,
-    description="Open Weather Tool",
-)
+first_question = "What's your zip code?"
+second_question = "Do you work in tech? (yes/no)"
+third_question = "Which company did you last work for? (google, facebook, openai, microsoft)"
+decline_message = "Thank you for your time! You're not suitable for the position"
+success_message = "Thank you for your time! You have been selected for the position"
 
-memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-
-prompt = PromptTemplate(
-    template="""Plan: {input}
-
-History: {chat_history}
-
-Let's think about answer step by step.
-If it's information retrieval task, solve it like a professor in particular field.""",
-    input_variables=["input", "chat_history"],
-)
-
-plan_prompt = PromptTemplate(
-    input_variables=["input", "chat_history"],
-    template="""Prepare plan for task execution. (e.g. retrieve current date to find weather forecast)
-
-    Tools to use: web search, Open Weather
-
-    Question: {input}
-
-    History: {chat_history}
-
-    Output look like this:
-    '''
-        Question: {input}
-
-        Execution plan: [execution_plan]
-
-        Rest of needed information: [rest_of_needed_information]
-    '''
-
-    '''
-        input: {input}
-    '''
-    """,
-)
-
-plan_chain = ConversationChain(
-    llm=llm,
-    memory=memory,
-    input_key="input",
-    prompt=plan_prompt,
-    output_key="output",
-)
-
-# Initialize Agent
-agent = initialize_agent(
-    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    tools=[search_tool, open_weather_tool],
-    llm=llm,
-    verbose=True,  # verbose option is for printing logs (only for development)
-    max_iterations=3,
-    prompt=prompt,
-    memory=memory,
-)
+first_question_answer = ''
+second_question_answer = ''
+third_question_answer = ''
 
 
-@cl.langchain_factory(use_async=False)
+@cl.langchain_factory(use_async=True)
 def main():
-    chain = plan_chain
+    llm = OpenAI(temperature=0)
+    chain = LLMChain(llm=llm, prompt=PromptTemplate.from_template(prompt_template))
     return chain
 
 
-@cl.langchain_run
-async def run(agent, input_str):
-    res = await cl.make_async(agent)(input_str, callbacks=[cl.LangchainCallbackHandler()])
-    await cl.Message(content=res["output"]).send()
+@cl.langchain_postprocess
+async def postprocess(output: str):
+    global is_first_question_asked
+    global is_second_question_asked
+    global is_third_question_asked
+
+    global first_question_answer
+    global second_question_answer
+    global third_question_answer
+
+    user_input = output['input']
+    ai_response = output['text']
+    print(output)
+    return_message = ''
+    if not is_first_question_asked:
+        return_message = first_question
+        is_first_question_asked = True
+        await cl.Message(content=return_message).send()
+    elif not is_second_question_asked:
+        first_question_answer = user_input
+        if not chech_fountain_header({"zip_code":  f"{user_input}"}):
+            reset_global_variabes()
+            await cl.Message(content=decline_message).send()
+        else:
+            return_message = second_question
+            is_second_question_asked = True
+            await cl.Message(content=return_message).send()
+    elif not is_third_question_asked:
+        second_question_answer = user_input
+        if not chech_fountain_header({"zip_code":  f"{first_question_answer}", "work_tech":  f"{user_input}"}):
+            reset_global_variabes()
+            await cl.Message(content=decline_message).send()
+        else:
+            return_message = third_question
+            is_third_question_asked = True
+            await cl.Message(content=return_message).send()
+    elif is_third_question_asked:
+        third_question_answer = user_input
+        reset_global_variabes()
+        if not chech_fountain_header({"zip_code":  f"{first_question_answer}", "work_tech":  f"{second_question_answer}", "company":  f"{third_question_answer}"}):
+            await cl.Message(content=decline_message).send()
+        else:
+            await cl.Message(content=success_message).send()
+
+
+def chech_fountain_header(body):
+    print(body)
+
+    response = requests.post("https://chatgpt.fountainheadme.com/api/screener", json=body)
+    print(response.text)
+    if response.text == '{"status":"match"}':
+        return True
+    elif response.text == '{"status":"dump"}':
+        return False
+
+
+def reset_global_variabes():
+    global is_first_question_asked
+    global is_second_question_asked
+    global is_third_question_asked
+
+    is_first_question_asked = False
+    is_second_question_asked = False
+    is_third_question_asked = False
