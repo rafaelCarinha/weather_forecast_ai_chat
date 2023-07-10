@@ -2,16 +2,23 @@ import json
 import os
 
 from dotenv import load_dotenv
-from langchain import PromptTemplate, OpenAI, LLMChain
 import chainlit as cl
 import requests
 
+from langchain.llms import LlamaCpp
+from langchain import PromptTemplate, LLMChain
+from langchain.callbacks.manager import CallbackManager
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+
 load_dotenv()
 
-# OpenAI API key
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
 prompt_template = "{input}?"
+
+template = """Question: {question}
+
+Answer: Let's work this out in a step by step way to be sure we have the right answer."""
+
+prompt = PromptTemplate(template=template, input_variables=["question"])
 
 is_first_question_asked = False
 is_second_question_asked = False
@@ -29,10 +36,20 @@ first_question_answer = ''
 second_question_answer = ''
 third_question_answer = ''
 
+# Callbacks support token-wise streaming
+callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
+# Verbose is required to pass to the callback manager
+
+
+# Make sure the model path is correct for your system!
+llm = LlamaCpp(
+    model_path="./ggml-model-q4_0.bin", callback_manager=callback_manager, verbose=True
+)
+
 
 @cl.langchain_factory(use_async=True)
 def main():
-    llm = OpenAI(temperature=0)
+    llm_chain = LLMChain(prompt=prompt, llm=llm)
     chain = LLMChain(llm=llm, prompt=PromptTemplate.from_template(prompt_template))
     return chain
 
