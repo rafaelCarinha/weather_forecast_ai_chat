@@ -10,6 +10,12 @@ from langchain import PromptTemplate, LLMChain
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
+from transformers import LlamaTokenizer, LlamaForCausalLM, GenerationConfig, pipeline
+from langchain.llms import HuggingFacePipeline
+from langchain import PromptTemplate, LLMChain
+
+import torch
+
 load_dotenv()
 
 prompt_template = "{input}?"
@@ -36,21 +42,41 @@ first_question_answer = ''
 second_question_answer = ''
 third_question_answer = ''
 
-# Callbacks support token-wise streaming
-callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
-# Verbose is required to pass to the callback manager
+# # Callbacks support token-wise streaming
+# callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
+# # Verbose is required to pass to the callback manager
 
 
-# Make sure the model path is correct for your system!
-llm = LlamaCpp(
-    model_path="./ggml-model-q4_0.bin", callback_manager=callback_manager, verbose=True
+# # Make sure the model path is correct for your system!
+# llm = LlamaCpp(
+#     model_path="./ggml-model-q4_0.bin", callback_manager=callback_manager, verbose=True
+# )
+
+
+tokenizer = LlamaTokenizer.from_pretrained("chavinlo/alpaca-native")
+
+base_model = LlamaForCausalLM.from_pretrained(
+    "chavinlo/alpaca-native",
+    load_in_8bit=True,
+    device_map='auto',
 )
 
+pipe = pipeline(
+    "text-generation",
+    model=base_model,
+    tokenizer=tokenizer,
+    max_length=256,
+    temperature=0.6,
+    top_p=0.95,
+    repetition_penalty=1.2
+)
+
+local_llm = HuggingFacePipeline(pipeline=pipe)
 
 @cl.langchain_factory(use_async=True)
 def main():
-    llm_chain = LLMChain(prompt=prompt, llm=llm)
-    chain = LLMChain(llm=llm, prompt=PromptTemplate.from_template(prompt_template))
+    #llm_chain = LLMChain(prompt=prompt, llm=llm)
+    chain = LLMChain(llm=local_llm, prompt=PromptTemplate.from_template(prompt_template))
     return chain
 
 
