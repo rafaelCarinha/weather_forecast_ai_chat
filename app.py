@@ -7,6 +7,8 @@ import requests
 
 from langchain import PromptTemplate, LLMChain, OpenAI
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from auto_gptq import AutoGPTQForCausalLM, BaseQuantizeConfig
+import argparse
 
 load_dotenv()
 
@@ -37,10 +39,32 @@ third_question_answer = ''
 #
 # tokenizer = AutoTokenizer.from_pretrained(model_id)
 
+#tokenizer = AutoTokenizer.from_pretrained("/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/llama")
+
+model_name_or_path = "TheBloke/falcon-40b-instruct-GPTQ"
+# You could also download the model locally, and access it there
+# model_name_or_path = "/path/to/TheBloke_falcon-40b-instruct-GPTQ"
+
+model_basename = "/home/ryan/repos/text-generation-webui/models/falcon-40b"
+
+use_triton = False
+
+tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
+
+model = AutoGPTQForCausalLM.from_quantized(model_name_or_path,
+        model_basename=model_basename,
+        use_safetensors=True,
+        trust_remote_code=True,
+        device="cuda:0",
+        use_triton=use_triton,
+        quantize_config=None)
+
+
 @cl.langchain_factory(use_async=True)
 def main():
     # llm = OpenAI(temperature=0)
-    llm = AutoModelForCausalLM.from_pretrained("/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/llama", device_map="auto", load_in_4bit=True)
+    #llm = AutoModelForCausalLM.from_pretrained("/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/llama", device_map="auto", load_in_4bit=True)
+    llm = model
     chain = LLMChain(llm=llm, prompt=PromptTemplate.from_template(prompt_template))
     return chain
 
