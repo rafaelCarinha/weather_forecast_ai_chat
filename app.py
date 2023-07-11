@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import chainlit as cl
 import requests
 
-from langchain import PromptTemplate, LLMChain
+from langchain import PromptTemplate, LLMChain, OpenAI
 from transformers import AutoModelForCausalLM
 
 load_dotenv()
@@ -28,15 +28,15 @@ first_question_answer = ''
 second_question_answer = ''
 third_question_answer = ''
 
-base_model = AutoModelForCausalLM.from_pretrained(
-    "/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/llama",
-    use_safetensors=True,
-)
+# base_model = AutoModelForCausalLM.from_pretrained(
+#     "/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/llama",
+#     use_safetensors=True,
+# )
 
 
 @cl.langchain_factory(use_async=True)
 def main():
-    llm = base_model
+    llm = OpenAI(temperature=0)
     chain = LLMChain(llm=llm, prompt=PromptTemplate.from_template(prompt_template))
     return chain
 
