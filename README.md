@@ -17,7 +17,8 @@ Once the virtualenv is activated, you can install the required dependencies.
 $ pip install -r requirements.txt
 ```
 
+pip install llama-cpp-python
 ### Run the APP 
 ```
-chainlit run app.py -w # -w flag is for restarting app after each change!
+chainlit run app.py -w --port 8080 # -w flag is for restarting app after each change!
 ```

@@ -5,26 +5,12 @@ from dotenv import load_dotenv
 import chainlit as cl
 import requests
 
-from langchain.llms import LlamaCpp
 from langchain import PromptTemplate, LLMChain
-from langchain.callbacks.manager import CallbackManager
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-
-from transformers import LlamaTokenizer, LlamaForCausalLM, GenerationConfig, pipeline
-from langchain.llms import HuggingFacePipeline
-from langchain import PromptTemplate, LLMChain
-
-import torch
+from transformers import AutoModelForCausalLM
 
 load_dotenv()
 
 prompt_template = "{input}?"
-
-template = """Question: {question}
-
-Answer: Let's work this out in a step by step way to be sure we have the right answer."""
-
-prompt = PromptTemplate(template=template, input_variables=["question"])
 
 is_first_question_asked = False
 is_second_question_asked = False
@@ -42,41 +28,16 @@ first_question_answer = ''
 second_question_answer = ''
 third_question_answer = ''
 
-# # Callbacks support token-wise streaming
-# callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
-# # Verbose is required to pass to the callback manager
-
-
-# # Make sure the model path is correct for your system!
-# llm = LlamaCpp(
-#     model_path="./ggml-model-q4_0.bin", callback_manager=callback_manager, verbose=True
-# )
-
-
-tokenizer = LlamaTokenizer.from_pretrained("chavinlo/alpaca-native")
-
-base_model = LlamaForCausalLM.from_pretrained(
-    "chavinlo/alpaca-native",
-    load_in_8bit=True,
-    device_map='auto',
+base_model = AutoModelForCausalLM.from_pretrained(
+    "/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/llama",
+    use_safetensors=True,
 )
 
-pipe = pipeline(
-    "text-generation",
-    model=base_model,
-    tokenizer=tokenizer,
-    max_length=256,
-    temperature=0.6,
-    top_p=0.95,
-    repetition_penalty=1.2
-)
-
-local_llm = HuggingFacePipeline(pipeline=pipe)
 
 @cl.langchain_factory(use_async=True)
 def main():
-    #llm_chain = LLMChain(prompt=prompt, llm=llm)
-    chain = LLMChain(llm=local_llm, prompt=PromptTemplate.from_template(prompt_template))
+    llm = base_model
+    chain = LLMChain(llm=llm, prompt=PromptTemplate.from_template(prompt_template))
     return chain
 
 
