@@ -75,7 +75,8 @@ llm_chain = LLMChain(prompt=prompt,
                      llm=local_llm
                      )
 
-@cl.langchain_factory(use_async=True)
+
+@cl.langchain_factory(use_async=False)
 def main():
     chain = llm_chain
     return chain
