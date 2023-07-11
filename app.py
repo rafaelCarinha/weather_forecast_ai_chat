@@ -73,10 +73,8 @@ prompt = PromptTemplate(template=prompt_template, input_variables=["instruction"
 
 @cl.langchain_factory(use_async=True)
 def main():
-    llm = local_llm
-    chain = LLMChain(prompt=prompt,
-                     llm=llm
-                     )
+    llm = model
+    chain = LLMChain(llm=llm, prompt=PromptTemplate.from_template(prompt_template))
     return chain
 
 
