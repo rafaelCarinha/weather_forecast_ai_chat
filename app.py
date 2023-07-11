@@ -39,31 +39,31 @@ third_question_answer = ''
 #
 # tokenizer = AutoTokenizer.from_pretrained(model_id)
 
-#tokenizer = AutoTokenizer.from_pretrained("/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/llama")
+# tokenizer = AutoTokenizer.from_pretrained("/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/llama")
 
 model_name_or_path = "/home/ryan/repos/text-generation-webui/models/falcon-40b"
 # You could also download the model locally, and access it there
 # model_name_or_path = "/path/to/TheBloke_falcon-40b-instruct-GPTQ"
 
-model_basename = "/home/ryan/repos/text-generation-webui/models/falcon-40b"
+model_basename = "gptq_model-4bit--1g"
 
 use_triton = False
 
 tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
 
 model = AutoGPTQForCausalLM.from_quantized(model_name_or_path,
-        model_basename=model_basename,
-        use_safetensors=True,
-        trust_remote_code=True,
-        device="cuda:0",
-        use_triton=use_triton,
-        quantize_config=None)
+                                           model_basename=model_basename,
+                                           use_safetensors=True,
+                                           trust_remote_code=True,
+                                           device="cuda:0",
+                                           use_triton=use_triton,
+                                           quantize_config=None)
 
 
 @cl.langchain_factory(use_async=True)
 def main():
     # llm = OpenAI(temperature=0)
-    #llm = AutoModelForCausalLM.from_pretrained("/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/llama", device_map="auto", load_in_4bit=True)
+    # llm = AutoModelForCausalLM.from_pretrained("/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/llama", device_map="auto", load_in_4bit=True)
     llm = model
     chain = LLMChain(llm=llm, prompt=PromptTemplate.from_template(prompt_template))
     return chain
@@ -89,7 +89,7 @@ async def postprocess(output: str):
         await cl.Message(content=return_message).send()
     elif not is_second_question_asked:
         first_question_answer = user_input
-        if not chech_fountain_header({"zip_code":  f"{user_input}"}):
+        if not chech_fountain_header({"zip_code": f"{user_input}"}):
             reset_global_variabes()
             await cl.Message(content=decline_message).send()
         else:
@@ -98,7 +98,7 @@ async def postprocess(output: str):
             await cl.Message(content=return_message).send()
     elif not is_third_question_asked:
         second_question_answer = user_input
-        if not chech_fountain_header({"zip_code":  f"{first_question_answer}", "work_tech":  f"{user_input}"}):
+        if not chech_fountain_header({"zip_code": f"{first_question_answer}", "work_tech": f"{user_input}"}):
             reset_global_variabes()
             await cl.Message(content=decline_message).send()
         else:
@@ -108,7 +108,8 @@ async def postprocess(output: str):
     elif is_third_question_asked:
         third_question_answer = user_input
         reset_global_variabes()
-        if not chech_fountain_header({"zip_code":  f"{first_question_answer}", "work_tech":  f"{second_question_answer}", "company":  f"{third_question_answer}"}):
+        if not chech_fountain_header({"zip_code": f"{first_question_answer}", "work_tech": f"{second_question_answer}",
+                                      "company": f"{third_question_answer}"}):
             await cl.Message(content=decline_message).send()
         else:
             await cl.Message(content=success_message).send()
