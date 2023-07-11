@@ -41,7 +41,7 @@ third_question_answer = ''
 
 #tokenizer = AutoTokenizer.from_pretrained("/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/llama")
 
-model_name_or_path = "TheBloke/falcon-40b-instruct-GPTQ"
+model_name_or_path = "/home/ryan/repos/text-generation-webui/models/falcon-40b"
 # You could also download the model locally, and access it there
 # model_name_or_path = "/path/to/TheBloke_falcon-40b-instruct-GPTQ"
 
