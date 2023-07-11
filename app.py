@@ -70,14 +70,13 @@ local_llm = HuggingFacePipeline(pipeline=pipe)
 
 prompt = PromptTemplate(template=prompt_template, input_variables=["instruction"])
 
-llm_chain = LLMChain(prompt=prompt,
-                     llm=local_llm
-                     )
-
 
 @cl.langchain_factory(use_async=True)
 def main():
-    chain = llm_chain
+    llm = local_llm
+    chain = LLMChain(prompt=prompt,
+                     llm=llm
+                     )
     return chain
 
 
