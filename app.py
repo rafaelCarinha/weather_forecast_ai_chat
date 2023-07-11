@@ -13,6 +13,7 @@ import argparse
 load_dotenv()
 
 model_name_or_path = "/home/ryan/repos/text-generation-webui/models/UltraLM-13B-GPTQ"
+#model_name_or_path = "/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/UltraLM-13B-GPTQ/UltraLM-13B-GPTQ"
 model_basename = "ultralm-13b-GPTQ-4bit-128g.no-act.order"
 
 use_triton = False
@@ -30,8 +31,8 @@ model = AutoGPTQForCausalLM.from_quantized(model_name_or_path,
 prompt_template = "{input}?"
 
 input_ids = tokenizer(prompt_template, return_tensors='pt').input_ids.cuda()
-output = model.generate(inputs=input_ids, temperature=0.7, max_new_tokens=512)
-print(tokenizer.decode(output[0]))
+#output = model.generate(inputs=input_ids, temperature=0.7, max_new_tokens=512)
+#print(tokenizer.decode(output[0]))
 
 # Inference can also be done using transformers' pipeline
 
@@ -73,7 +74,6 @@ prompt = PromptTemplate(template=prompt_template, input_variables=["input"])
 llm_chain = LLMChain(prompt=prompt,
                      llm=local_llm
                      )
-
 
 @cl.langchain_factory(use_async=True)
 def main():
