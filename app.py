@@ -5,15 +5,13 @@ from dotenv import load_dotenv
 import chainlit as cl
 import requests
 
-from langchain import PromptTemplate, LLMChain, OpenAI, HuggingFacePipeline
+from langchain import PromptTemplate, LLMChain, HuggingFacePipeline
 from transformers import AutoTokenizer, pipeline, logging
-from auto_gptq import AutoGPTQForCausalLM, BaseQuantizeConfig
-import argparse
+from auto_gptq import AutoGPTQForCausalLM
 
 load_dotenv()
 
 model_name_or_path = "/home/ryan/repos/text-generation-webui/models/UltraLM-13B-GPTQ"
-#model_name_or_path = "/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/UltraLM-13B-GPTQ/UltraLM-13B-GPTQ"
 model_basename = "ultralm-13b-GPTQ-4bit-128g.no-act.order"
 
 use_triton = False
@@ -31,10 +29,6 @@ model = AutoGPTQForCausalLM.from_quantized(model_name_or_path,
 prompt_template = "{input}?"
 
 input_ids = tokenizer(prompt_template, return_tensors='pt').input_ids.cuda()
-#output = model.generate(inputs=input_ids, temperature=0.7, max_new_tokens=512)
-#print(tokenizer.decode(output[0]))
-
-# Inference can also be done using transformers' pipeline
 
 # Prevent printing spurious transformers error when using pipeline with AutoGPTQ
 logging.set_verbosity(logging.CRITICAL)
