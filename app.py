@@ -6,7 +6,7 @@ import chainlit as cl
 import requests
 
 from langchain import PromptTemplate, LLMChain, OpenAI
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 load_dotenv()
 
@@ -33,10 +33,14 @@ third_question_answer = ''
 #     use_safetensors=True,
 # )
 
+# model_id = "bigscience/bloom-1b7"
+#
+# tokenizer = AutoTokenizer.from_pretrained(model_id)
 
 @cl.langchain_factory(use_async=True)
 def main():
-    llm = OpenAI(temperature=0)
+    # llm = OpenAI(temperature=0)
+    llm = AutoModelForCausalLM.from_pretrained("/Users/rafaelmarins/PycharmProjects/weather_forecast_ai_chat/llama", device_map="auto", load_in_4bit=True)
     chain = LLMChain(llm=llm, prompt=PromptTemplate.from_template(prompt_template))
     return chain
 
