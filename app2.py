@@ -10,14 +10,19 @@ use_triton = False
 tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
 
 model = AutoGPTQForCausalLM.from_quantized(model_name_or_path,
-                                           model_basename=model_basename,
-                                           use_safetensors=True,
-                                           trust_remote_code=False,
-                                           device="cuda:0",
-                                           use_triton=use_triton,
-                                           quantize_config=None)
+        model_basename=model_basename,
+        use_safetensors=True,
+        trust_remote_code=False,
+        device="cuda:0",
+        use_triton=use_triton,
+        quantize_config=None)
 
-prompt_template = "{input}?"
+# Note: check the prompt template is correct for this model.
+prompt = "Tell me about AI"
+prompt_template=f'''USER: {prompt}
+ASSISTANT:'''
+
+print("\n\n*** Generate:")
 
 input_ids = tokenizer(prompt_template, return_tensors='pt').input_ids.cuda()
 output = model.generate(inputs=input_ids, temperature=0.7, max_new_tokens=512)
