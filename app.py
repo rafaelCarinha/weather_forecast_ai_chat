@@ -80,7 +80,7 @@ def main():
 
 @cl.langchain_postprocess
 @jit(target_backend='cuda')
-async def postprocess(output: str):
+def postprocess(output: str):
     # global is_first_question_asked
     # global is_second_question_asked
     # global is_third_question_asked
@@ -124,7 +124,7 @@ async def postprocess(output: str):
     #     else:
     #         await cl.Message(content=success_message).send()
 
-    await cl.Message(content=ai_response).send()
+    cl.Message(content=ai_response).send()
 
 
 def chech_fountain_header(body):
