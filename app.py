@@ -4,11 +4,16 @@ import os
 from dotenv import load_dotenv
 import chainlit as cl
 import requests
-from numba import jit, cuda
+from numba import jit, cuda, NumbaDeprecationWarning, NumbaPendingDeprecationWarning
 
 from langchain import PromptTemplate, LLMChain, HuggingFacePipeline
 from transformers import AutoTokenizer, pipeline, logging
 from auto_gptq import AutoGPTQForCausalLM
+
+import warnings
+
+warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
+warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
 
 load_dotenv()
 
