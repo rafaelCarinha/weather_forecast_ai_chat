@@ -27,7 +27,13 @@ model = AutoGPTQForCausalLM.from_quantized(model_name_or_path,
                                            use_triton=use_triton,
                                            quantize_config=None)
 
-prompt_template = "{input}?"
+prompt_template = """
+This is a conversation between a job seeking Human and an AI Human Resources agent.
+Ask for their name.
+
+{input}?
+
+"""
 
 input_ids = tokenizer(prompt_template, return_tensors='pt').input_ids.cuda()
 
