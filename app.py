@@ -81,48 +81,50 @@ def main():
 @cl.langchain_postprocess
 @jit(target_backend='cuda')
 async def postprocess(output: str):
-    global is_first_question_asked
-    global is_second_question_asked
-    global is_third_question_asked
-
-    global first_question_answer
-    global second_question_answer
-    global third_question_answer
+    # global is_first_question_asked
+    # global is_second_question_asked
+    # global is_third_question_asked
+    #
+    # global first_question_answer
+    # global second_question_answer
+    # global third_question_answer
 
     user_input = output['input']
     ai_response = output['text']
     print(output)
-    return_message = ''
-    if not is_first_question_asked:
-        return_message = first_question
-        is_first_question_asked = True
-        await cl.Message(content=return_message).send()
-    elif not is_second_question_asked:
-        first_question_answer = user_input
-        if not chech_fountain_header({"zip_code": f"{user_input}"}):
-            reset_global_variabes()
-            await cl.Message(content=decline_message).send()
-        else:
-            return_message = second_question
-            is_second_question_asked = True
-            await cl.Message(content=return_message).send()
-    elif not is_third_question_asked:
-        second_question_answer = user_input
-        if not chech_fountain_header({"zip_code": f"{first_question_answer}", "work_tech": f"{user_input}"}):
-            reset_global_variabes()
-            await cl.Message(content=decline_message).send()
-        else:
-            return_message = third_question
-            is_third_question_asked = True
-            await cl.Message(content=return_message).send()
-    elif is_third_question_asked:
-        third_question_answer = user_input
-        reset_global_variabes()
-        if not chech_fountain_header({"zip_code": f"{first_question_answer}", "work_tech": f"{second_question_answer}",
-                                      "company": f"{third_question_answer}"}):
-            await cl.Message(content=decline_message).send()
-        else:
-            await cl.Message(content=success_message).send()
+    # return_message = ''
+    # if not is_first_question_asked:
+    #     return_message = first_question
+    #     is_first_question_asked = True
+    #     await cl.Message(content=return_message).send()
+    # elif not is_second_question_asked:
+    #     first_question_answer = user_input
+    #     if not chech_fountain_header({"zip_code": f"{user_input}"}):
+    #         reset_global_variabes()
+    #         await cl.Message(content=decline_message).send()
+    #     else:
+    #         return_message = second_question
+    #         is_second_question_asked = True
+    #         await cl.Message(content=return_message).send()
+    # elif not is_third_question_asked:
+    #     second_question_answer = user_input
+    #     if not chech_fountain_header({"zip_code": f"{first_question_answer}", "work_tech": f"{user_input}"}):
+    #         reset_global_variabes()
+    #         await cl.Message(content=decline_message).send()
+    #     else:
+    #         return_message = third_question
+    #         is_third_question_asked = True
+    #         await cl.Message(content=return_message).send()
+    # elif is_third_question_asked:
+    #     third_question_answer = user_input
+    #     reset_global_variabes()
+    #     if not chech_fountain_header({"zip_code": f"{first_question_answer}", "work_tech": f"{second_question_answer}",
+    #                                   "company": f"{third_question_answer}"}):
+    #         await cl.Message(content=decline_message).send()
+    #     else:
+    #         await cl.Message(content=success_message).send()
+
+    await cl.Message(content=ai_response).send()
 
 
 def chech_fountain_header(body):
