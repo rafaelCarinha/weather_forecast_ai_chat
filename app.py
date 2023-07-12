@@ -81,7 +81,7 @@ llm_chain = LLMChain(prompt=prompt,
 
 
 @cl.langchain_factory(use_async=False)
-#@jit(target_backend='cuda')
+@jit(target_backend='cuda')
 def main():
     chain = llm_chain
     return chain
