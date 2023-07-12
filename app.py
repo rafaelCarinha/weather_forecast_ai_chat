@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 import chainlit as cl
 import requests
+from numba import jit, cuda
 
 from langchain import PromptTemplate, LLMChain, HuggingFacePipeline
 from transformers import AutoTokenizer, pipeline, logging
@@ -71,12 +72,14 @@ llm_chain = LLMChain(prompt=prompt,
 
 
 @cl.langchain_factory(use_async=False)
+@jit(target_backend='cuda')
 def main():
     chain = llm_chain
     return chain
 
 
 @cl.langchain_postprocess
+@jit(target_backend='cuda')
 async def postprocess(output: str):
     global is_first_question_asked
     global is_second_question_asked
